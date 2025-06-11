@@ -9,6 +9,7 @@ PUBLIC_KEY_FILE = KEY_DIR / 'public_key.pem'
 
 
 def generate_keys(passphrase: bytes | None = None) -> None:
+    """Generate an Ed25519 key pair and store it with restrictive permissions."""
     KEY_DIR.mkdir(exist_ok=True)
     private_key = ed25519.Ed25519PrivateKey.generate()
     priv_bytes = private_key.private_bytes(
@@ -21,6 +22,7 @@ def generate_keys(passphrase: bytes | None = None) -> None:
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
     PRIVATE_KEY_FILE.write_bytes(priv_bytes)
+    os.chmod(PRIVATE_KEY_FILE, 0o600)
     PUBLIC_KEY_FILE.write_bytes(pub_bytes)
 
 

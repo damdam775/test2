@@ -1,8 +1,10 @@
 # Secure P2P Demo
 
-This is a minimal proof-of-concept for a peer-to-peer application that stores
-its keys locally and uses end-to-end encryption. The implementation is a
-starting point inspired by the requested feature list.
+This is a minimal proof-of-concept for a peer‑to‑peer application that stores
+its keys locally and uses end‑to‑end encryption. Session keys are negotiated
+with an ephemeral X25519 exchange so no long‑term secrets are sent over the
+wire. The implementation is a starting point inspired by the requested feature
+list.
 
 ## Requirements
 
@@ -25,3 +27,4 @@ python3 -m p2papp.cli send ws://localhost:8765 "hello"
 
 Keys are stored in `p2papp/data/` and protected by the passphrase entered when
 running the commands. This simulates unlocking the private key with biometrics.
+All messages are encrypted using AES‑GCM after the handshake completes.

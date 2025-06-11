@@ -9,15 +9,19 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from . import keys
+from . import vault, keys
 
 
 class P2PNode:
-    def __init__(self, nickname: str, passphrase: bytes | None = None):
+    def __init__(self, nickname: str, passphrase: bytes):
         self.nickname = nickname
-        if not keys.PRIVATE_KEY_FILE.exists():
-            keys.generate_keys(passphrase)
-        self.private_key: Ed25519PrivateKey = keys.load_private_key(passphrase)
+        try:
+            vault_data = vault.load_vault(passphrase)
+        except FileNotFoundError:
+            raise RuntimeError("Vault not found. Run 'pair' first.")
+        self.private_key: Ed25519PrivateKey = keys.load_private_key_from_bytes(
+            vault_data['priv_key'].encode(), passphrase
+        )
         self.public_key = self.private_key.public_key()
 
     async def handler(self, websocket):

@@ -22,10 +22,11 @@ pip install cryptography websockets
 
 ### Pair devices
 
-Generate a key pair the first time you run the app:
+Register a phone and generate a seed vault on first launch. The command
+requires the phone's Wi-Fi MAC address and public key:
 
 ```bash
-python3 -m p2papp.cli pair
+python3 -m p2papp.cli pair AA:BB:CC:DD:EE:FF phonePubKeyHex
 ```
 
 ### Run a node
@@ -44,7 +45,8 @@ python3 -m p2papp.cli send ws://HOST:8765 "hello"
 
 ### Wallet
 
-Create wallet seeds (shown once and stored encrypted):
+Create wallet seeds (shown once and stored in the seed vault). A biometric
+passphrase is requested to unlock the vault:
 
 ```bash
 python3 -m p2papp.cli wallet create
@@ -69,6 +71,11 @@ python3 -m p2papp.cli listtasks
 All task data is stored locally in `p2papp/data/` encrypted at rest.  This keeps
 private details on your device while still enabling peer discovery when the node
 is extended to broadcast listings.
+
+The seed vault and a small ledger are written under `~/.guildvault`. The vault
+stores the node keypair and wallet seeds encrypted with your biometric
+passphrase. The ledger is an append-only list of registrations signed by each
+node, storing only salted MAC tokens and coarse location.
 
 ## Project Overview
 

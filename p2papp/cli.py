@@ -2,7 +2,7 @@ import argparse
 import asyncio
 from getpass import getpass
 from .node import P2PNode
-from . import keys, wallet, storage
+from . import keys, wallet, storage, vault, ledger
 
 
 def main():
@@ -15,7 +15,9 @@ def main():
     send.add_argument("uri")
     send.add_argument("message")
 
-    sub.add_parser("pair")
+    pair = sub.add_parser("pair")
+    pair.add_argument("phone_mac")
+    pair.add_argument("phone_pub")
 
     wgen = sub.add_parser("wallet")
     wgen.add_argument("action", choices=["create", "show"])
@@ -30,12 +32,25 @@ def main():
 
     args = parser.parse_args()
 
-    passphrase_in = getpass("Biometric unlock: ") or None
-    passphrase = passphrase_in.encode() if passphrase_in else None
+    passphrase_in = getpass("Biometric unlock: ")
+    passphrase = passphrase_in.encode()
 
     if args.cmd == "pair":
-        keys.generate_keys(passphrase)
-        print("Keys generated")
+        mac_token = keys.mac_token(args.phone_mac)
+        if ledger.has_mac_token(mac_token):
+            print("Device already registered in ledger")
+            return
+        bio_sig = input("Speak phrase (simulate): ")
+        geo = input("City: ")
+        data = vault.create_vault(passphrase, args.phone_mac, args.phone_pub, bio_sig, geo)
+        priv = keys.load_private_key_from_bytes(data['priv_key'].encode(), passphrase)
+        ledger.append_registration(priv, {
+            'mac_token': data['mac_token'],
+            'phone_pub': data['phone_pub'],
+            'bio_sig': data['bio_sig'],
+            'geo': data['geo'],
+        })
+        print("Paired and registered")
         return
 
     node = P2PNode(nickname="anon", passphrase=passphrase)
